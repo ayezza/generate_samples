@@ -14,7 +14,7 @@
     
     c. generate_graphs: 1 (generate all graphs) or 0 otherwise. Default is 1
     
-    d: polynomial_degree: 2 (Linear polynomial regession degree, starting from 2). Default set to 2
+    d. polynomial_degree: 2 (Linear polynomial regession degree, starting from 2). Default set to 2
     
     e. show_graphs: 1 to show graphs, anything else if not. Default set to 1
     
