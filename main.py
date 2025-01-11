@@ -163,6 +163,25 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
                 ax[1, 1].axvline(point_x, ymin=0, ymax=ymax, 
                                  linewidth=1, color='lime', linestyle='--', label=str(point[0]))
             
+            # Création d'une légende détaillée pour les paramètres statistiques
+            stats_text = (
+                f'Statistiques:\n'
+                f'μ (moyenne) = {np.mean(y_data):.5f}\n'
+                f'σ (écart-type) = {sigma:.5f}\n'
+                f'mode = {mode_val:.5f}\n'
+                f'médiane = {np.median(y_data):.5f}'
+            )
+
+            # Position de la légende (en coordonnées relatives de l'axe)
+            ax[1, 1].text(0.95, 0.95, stats_text,
+                          transform=ax[1, 1].transAxes,
+                          verticalalignment='top',
+                          horizontalalignment='right',
+                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+            # Ajout d'une légende pour les lignes
+            ax[1, 1].legend(loc='upper left', bbox_to_anchor=(0.02, 0.98))
+            
 
 
 
@@ -320,6 +339,25 @@ class DataVisualizer:
                 ymax = point_y / ax[1, 1].get_ylim()[1]
                 ax[1, 1].axvline(point_x, ymin=0, ymax=ymax, 
                                  linewidth=1, color='lime', linestyle='--', label=str(point[0]))
+            
+            # Création d'une légende détaillée pour les paramètres statistiques
+            stats_text = (
+                f'Statistiques:\n'
+                f'μ (moyenne) = {np.mean(y_data):.5f}\n'
+                f'σ (écart-type) = {sigma:.5f}\n'
+                f'mode = {mode_val:.5f}\n'
+                f'médiane = {np.median(y_data):.5f}'
+            )
+
+            # Position de la légende (en coordonnées relatives de l'axe)
+            ax[1, 1].text(0.95, 0.95, stats_text,
+                          transform=ax[1, 1].transAxes,
+                          verticalalignment='top',
+                          horizontalalignment='right',
+                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+            # Ajout d'une légende pour les lignes
+            ax[1, 1].legend(loc='upper left', bbox_to_anchor=(0.02, 0.98))
             
 
     def plot_all_populations_samples(self, x_data, y_data, graphs_folder_name, polynomial_degree=2, show_graphs=True):
