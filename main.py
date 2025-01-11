@@ -61,19 +61,6 @@ def plot_all_populations_samples(x_data=list(), y_data=list(), graphs_folder_nam
         predicted_one_value = slope*sample[0] + intercept
         print('\nTest Sample value: ' + str(sample[0]) + '\nPredicted returned mean value: ' + str(predicted_one_value[0][0]))
     
-    # print('\n-----------------------------------\n')
-    # print('\nTEST OF POLYNOMIAL REGRESSION\n')
-    # print('\n-----------------------------------\n')
-    # if polynomial_model is not None:
-    #     y_vals = model.predict(X_vals)
-    #     pop_size = 1000
-    #     s_size = 500
-    #     sample_value = np.random.random_integers( low=0,high=pop_size, size=1)
-    #     predicted_mean_value = polynomial_model.predict(np.array([sample_value]).reshape(-1, 1), np.array([0.5]))
-    #     print('Test Sample value: ' + str(sample) + '\nPredicted returned mean value: ' + str(predicted_mean_value))
-    
-    # plt.close()
-    
 
 def normal_function(mu, sigma, x):
     """Calcule la valeur de la fonction de densité normale"""
@@ -135,7 +122,7 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             
     
             ax[1, 1].hist(y_data, density=True, histtype='step', label='Samples counts histogram', alpha=1)
-            mode_val = y_data[np.argmax(np.bincount(np.array(y_data * 1000, dtype=int)))] / 1000
+            mode_val = calculate_mode(y_data)
             title = (f'Fitted normal distribution\n'
                      f'({colored_text("σ", "lime")}={sigma:.5f}  '
                      f'{colored_text("μ", "red")}={mu:.5f}  '
@@ -263,6 +250,24 @@ def colored_text(text, color):
         return 'mode'
     return text
 
+def calculate_mode(data):
+    """Calcule le mode des données de manière robuste"""
+    try:
+        # Normaliser les données pour éviter les valeurs négatives
+        normalized_data = data - np.min(data)
+        # Mettre à l'échelle et convertir en entiers
+        scaled_data = (normalized_data * 1000).astype(int)
+        # Calculer le mode
+        counts = np.bincount(scaled_data)
+        mode_scaled = np.argmax(counts)
+        # Reconvertir à l'échelle originale et décaler
+        mode_val = (mode_scaled / 1000) + np.min(data)
+        return mode_val
+    except Exception as e:
+        print(f"Erreur dans calculate_mode: {str(e)}")
+        # En cas d'erreur, retourner la moyenne
+        return np.mean(data)
+
 class DataVisualizer:
     def __init__(self, plt=None):
         self.plt = plt if plt else __import__('matplotlib.pyplot').pyplot
@@ -312,7 +317,7 @@ class DataVisualizer:
             
     
             ax[1, 1].hist(y_data, density=True, histtype='step', label='Samples counts histogram', alpha=1)
-            mode_val = y_data[np.argmax(np.bincount(np.array(y_data * 1000, dtype=int)))] / 1000
+            mode_val = calculate_mode(y_data)
             title = (f'Fitted normal distribution\n'
                      f'({colored_text("σ", "lime")}={sigma:.5f}  '
                      f'{colored_text("μ", "red")}={mu:.5f}  '
