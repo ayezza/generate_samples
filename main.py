@@ -16,17 +16,10 @@ from sklearn.preprocessing import PolynomialFeatures
 
 
 def isFileExist(fileFullPath):
-    import os
     if fileFullPath is not None:
-        if os.path.isfile(fileFullPath):
-            if os.path.exists(fileFullPath):
-                return True
-            else:
-                return False
-        else:
-            return False
-    else:
-        return False
+        directory = os.path.dirname(os.path.abspath(fileFullPath))
+        return os.path.exists(directory)
+    return False
     
     
 def plot_all_populations_samples(x_data=list(), y_data=list(), graphs_folder_name='./graphs/', polynomial_degree=2, show_graphs=True, plt=None):
@@ -142,8 +135,12 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             
     
             ax[1, 1].hist(y_data, density=True, histtype='step', label='Samples counts histogram', alpha=1)
-            ax[1, 1].set_title('Fitted normal distribution\n(' + str('\u03C3') + "=" + str(round(sigma, 5)) + '  ' + str(r'$\mu=$') + str(round(mu, 5)), 
-                               fontsize=10, color=default_plot_params['color'])
+            mode_val = y_data[np.argmax(np.bincount(np.array(y_data * 1000, dtype=int)))] / 1000
+            title = (f'Fitted normal distribution\n'
+                     f'({colored_text("σ", "lime")}={sigma:.5f}  '
+                     f'{colored_text("μ", "red")}={mu:.5f}  '
+                     f'{colored_text("mode", "orange")}={mode_val:.5f})')
+            ax[1, 1].set_title(title, fontsize=10, color=default_plot_params['color'])
             ax[1, 1].plot(x, norm.pdf(x, mu, sigma),'b-', linewidth=2, label='Fitted Normal distribution')
             
             # plot other metrics (mean, median, mode, sigma) as vertical lines
@@ -151,7 +148,7 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             median_y = norm.pdf(np.median(y_data), mu, sigma)  # Hauteur de la courbe à la médiane
 
             ax[1, 1].axvline(np.mean(y_data), ymin=0, ymax=mean_y, 
-                             linewidth=2, color='r', linestyle='dashed', label=str('$\mu$'))
+                             linewidth=2, color='r', linestyle='dashed', label=r'$\mu$')
             ax[1, 1].axvline(np.median(y_data), ymin=0, ymax=median_y, 
                              linewidth=2, color='g', linestyle='dotted', label='median')
 
@@ -237,6 +234,16 @@ class SampleAnalyzer:
             
         return sample_sizes, means
 
+def colored_text(text, color):
+    """Helper function pour créer du texte coloré"""
+    if text == "σ":
+        return r'$\sigma$'
+    elif text == "μ":
+        return r'$\mu$'
+    elif text == "mode":
+        return 'mode'
+    return text
+
 class DataVisualizer:
     def __init__(self, plt=None):
         self.plt = plt if plt else __import__('matplotlib.pyplot').pyplot
@@ -275,7 +282,7 @@ class DataVisualizer:
             # box plot to show more precise parameters
             ax[1, 0].boxplot(y_data)
             ax[1, 0].set_title('Sample data box plot', fontsize=10, color=default_plot_params['color'])
-            ax[1, 0].legend()
+            #ax[1, 0].legend()
             
             # fit y_data to to a normal distribution
             # print('Max y_data: ' + str(max(y_data)))
@@ -286,8 +293,12 @@ class DataVisualizer:
             
     
             ax[1, 1].hist(y_data, density=True, histtype='step', label='Samples counts histogram', alpha=1)
-            ax[1, 1].set_title('Fitted normal distribution\n(' + str('\u03C3') + "=" + str(round(sigma, 5)) + '  ' + str(r'$\mu=$') + str(round(mu, 5)), 
-                               fontsize=10, color=default_plot_params['color'])
+            mode_val = y_data[np.argmax(np.bincount(np.array(y_data * 1000, dtype=int)))] / 1000
+            title = (f'Fitted normal distribution\n'
+                     f'({colored_text("σ", "lime")}={sigma:.5f}  '
+                     f'{colored_text("μ", "red")}={mu:.5f}  '
+                     f'{colored_text("mode", "orange")}={mode_val:.5f})')
+            ax[1, 1].set_title(title, fontsize=10, color=default_plot_params['color'])
             ax[1, 1].plot(x, norm.pdf(x, mu, sigma),'b-', linewidth=2, label='Fitted Normal distribution')
             
             # plot other metrics (mean, median, mode, sigma) as vertical lines
@@ -295,7 +306,7 @@ class DataVisualizer:
             median_y = norm.pdf(np.median(y_data), mu, sigma)  # Hauteur de la courbe à la médiane
 
             ax[1, 1].axvline(np.mean(y_data), ymin=0, ymax=mean_y, 
-                             linewidth=2, color='r', linestyle='dashed', label=str('$\mu$'))
+                             linewidth=2, color='r', linestyle='dashed', label=r'$\mu$')
             ax[1, 1].axvline(np.median(y_data), ymin=0, ymax=median_y, 
                              linewidth=2, color='g', linestyle='dotted', label='median')
 
@@ -338,8 +349,15 @@ class DataVisualizer:
         X_vals = np.linspace(0, 1, 100).reshape(-1, 1)
         y_vals = reg.predict(X_vals)
         
-        plt.scatter(X, y, c='r')
-        plt.plot(X_vals, y_vals, color='b')
+        plt.figure(figsize=(10, 6))
+        plt.scatter(X, y, c='r', label='Sample points')
+        plt.plot(X_vals, y_vals, color='b', label='Linear regression')
+        plt.title('Linear Regression Test')
+        plt.xlabel('X values')
+        plt.ylabel('Y values')
+        plt.legend()
+        plt.grid(True)
+        
         if self.show_graphs:
             plt.show()
         plt.savefig(os.path.join(self.graphs_folder_name, 'linear_regression_test.png'))
@@ -357,8 +375,15 @@ class DataVisualizer:
         X_vals_poly = poly_features.transform(X_vals)
         y_vals = reg.predict(X_vals_poly)
         
-        plt.scatter(X, y, c='r')
-        plt.plot(X_vals, y_vals, color='b')
+        plt.figure(figsize=(10, 6))
+        plt.scatter(X, y, c='r', label='Sample points')
+        plt.plot(X_vals, y_vals, color='b', label=f'Polynomial regression (degree={degree})')
+        plt.title('Polynomial Regression Test')
+        plt.xlabel('X values')
+        plt.ylabel('Y values')
+        plt.legend()
+        plt.grid(True)
+        
         if self.show_graphs:
             plt.show()
         plt.savefig(os.path.join(self.graphs_folder_name, 'polynomial_regression_test.png'))
@@ -375,8 +400,19 @@ class SampleGenerator:
         self.graphs_folder_name = graphs_folder_name
         self.show_graphs = show_graphs
         
+        # Créer les dossiers nécessaires
+        if self.generate_graphs:
+            os.makedirs(self.graphs_folder_name, exist_ok=True)
+        
+        # Assurer que le dossier parent du fichier de sortie existe
+        output_dir = os.path.dirname(os.path.abspath(self.output_file))
+        if output_dir:  # Si le chemin n'est pas vide
+            os.makedirs(output_dir, exist_ok=True)
+        
         self.population = Population(population_size)
         self.visualizer = DataVisualizer()
+        self.visualizer.graphs_folder_name = self.graphs_folder_name
+        self.visualizer.show_graphs = self.show_graphs
         self.out_df = pd.DataFrame(columns=['rank', 'population_name', 'population_size', 
                                           'sample_name', 'sample_size', 'sample_mean'])
 
@@ -595,9 +631,10 @@ if __name__ == '__main__':
             csv_output_file_path ='./data/output.csv'
             if len(sys.argv)>=3: 
                 if (sys.argv[2] is not None): 
-                    if isFileExist(sys.argv[2]): 
-                        t =  datetime.fromtimestamp(time.time())
-                        csv_output_file_path = os.path.splitext(os.path.basename(sys.argv[2]))[0] + '-' + str(format(t, '%Y-%m-%d-%I-%M%S%p')) + os.path.splitext(os.path.basename(sys.argv[2]))[1]
+                    csv_output_file_path = sys.argv[2]
+                    if not os.path.isabs(csv_output_file_path):
+                        csv_output_file_path = os.path.join('./data', csv_output_file_path)
+                    os.makedirs(os.path.dirname(os.path.abspath(csv_output_file_path)), exist_ok=True)
             # 2nd parameter
             generate_graphs = True
             if len(sys.argv)>=4: 
