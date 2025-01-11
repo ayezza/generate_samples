@@ -1,14 +1,12 @@
 import sys
 import os
-import math
 import time
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
-# import sympy as sp
-# from sympy import pi
-# from sympy.printing import latex
+import matplotlib.pyplot as plt
+
 from statistics import mode
 from scipy.stats import norm
 from scipy.spatial import distance
@@ -85,7 +83,8 @@ def plot_all_populations_samples(x_data=list(), y_data=list(), graphs_folder_nam
     
 
 def normal_function(mu, sigma, x):
-    return ( 1/(sigma*math.sqrt(2*math.pi)) )*math.exp(( -pow(x-mu, 2)/(2*sigma*sigma)) )
+    """Calcule la valeur de la fonction de densité normale"""
+    return (1/(sigma * np.sqrt(2 * np.pi))) * np.exp(-(x - mu)**2 / (2 * sigma**2))
     
 
 def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
@@ -148,19 +147,24 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             ax[1, 1].plot(x, norm.pdf(x, mu, sigma),'b-', linewidth=2, label='Fitted Normal distribution')
             
             # plot other metrics (mean, median, mode, sigma) as vertical lines
-            ax[1, 1].axvline(np.mean(y_data), ymin=0, ymax=np.max(x_data), linewidth=2, color='r', linestyle='dashed', label=str('$\mu$'), )
-            ax[1, 1].axvline(np.median(y_data),  ymin=0, ymax=np.max(x_data), linewidth=2, color='g', linestyle='dotted', label='median')
-            # ax[1, 1].axvline(mode(y_data),  ymin=0, ymax=np.max(x_data), linewidth=2, color='orange', linestyle='dashdot', label='mode') # the mode has no meanning in this case
-            # ax[1, 1].axvline(sigma,  ymin=0, ymax=np.max(x_data), linewidth=2, color='lime', linestyle='--', label=str('\u03C3'))
-            
-            
+            mean_y = norm.pdf(np.mean(y_data), mu, sigma)  # Hauteur de la courbe à la moyenne
+            median_y = norm.pdf(np.median(y_data), mu, sigma)  # Hauteur de la courbe à la médiane
+
+            ax[1, 1].axvline(np.mean(y_data), ymin=0, ymax=mean_y, 
+                             linewidth=2, color='r', linestyle='dashed', label=str('$\mu$'))
+            ax[1, 1].axvline(np.median(y_data), ymin=0, ymax=median_y, 
+                             linewidth=2, color='g', linestyle='dotted', label='median')
+
             # add lines corresponding to (1sigma, 2sigma, 3sigma, -1sigma, -2sigma, -3sigma)
-            my_points = [[str('\u03C3'), sigma], [str('2\u03C3'), 2*sigma],  [str('3\u03C3'), 3*sigma],
-                         [str('-\u03C3'), -sigma], [str('-2\u03C3'), -2*sigma],  [str('-3\u03C3'), -3*sigma]]
-            for x in my_points:
-                y = normal_function(mu=mu, sigma=sigma, x=x[1] + mu)    # make it centered at 0
-                ax[1, 1].axvline(x[1] + mu, ymin=0, ymax=y, linewidth=1, color='lime', linestyle='--', label=str(x[0]))
-                # ax[1, 1].set_xticks(ticks=x[1], labels=x[0])
+            my_points = [[str('\u03C3'), sigma], [str('2\u03C3'), 2*sigma], [str('3\u03C3'), 3*sigma],
+                         [str('-\u03C3'), -sigma], [str('-2\u03C3'), -2*sigma], [str('-3\u03C3'), -3*sigma]]
+            for point in my_points:
+                point_x = point[1] + mu  # Point sur l'axe x
+                point_y = norm.pdf(point_x, mu, sigma)  # Hauteur de la courbe à ce point
+                # Convertir en coordonnées relatives pour ymax (entre 0 et 1)
+                ymax = point_y / ax[1, 1].get_ylim()[1]
+                ax[1, 1].axvline(point_x, ymin=0, ymax=ymax, 
+                                 linewidth=1, color='lime', linestyle='--', label=str(point[0]))
             
 
 
@@ -207,202 +211,286 @@ def PolynomialRegessionOfMeanSamples(x, y, mode='linear', degree = 2, p_max_size
     return 0
 
 
-def GenerateSamples(p_max_size=1000, out_csv_file='output.csv', generate_graphs = True, polynomial_degree = 2, graphs_folder_name='./graphs/', show_graphs=True):
-    ret = 0
-    try:
-        # Variablize the sampling size (25, 50, 100, 150...) and plot corresponding means
-        # Generate a random population
-        p_max_size = p_max_size # population size
-        population = np.random.randn(p_max_size)
-        # print ('MAX population size: ' + str(p_max_size))
-        import matplotlib.pyplot as plt
+class Population:
+    def __init__(self, size=1000):
+        self.size = size
+        self.data = np.random.randn(size)
+
+    def generate_sample(self, sample_size, replace=False):
+        return np.random.choice(a=self.data, size=sample_size, replace=replace)
+
+class SampleAnalyzer:
+    def __init__(self, population, sample_segment=5):
+        self.population = population
+        self.sample_segment = sample_segment
+        self.samples = []
+        self.means = []
         
-        out_df = pd.DataFrame(columns=['rank', 'population_name', 'population_size', 'sample_name', 'sample_size', 'sample_mean'])
-        idx = 0
-        i = 0
-        j = 0
-        all_samples = []
-        all_means = []
+    def analyze_samples(self, max_sample_size):
+        sample_sizes = []
+        means = []
         
-        for p_size in range(min(p_max_size, 100 ), p_max_size, min(p_max_size, 200 ) ):
-            # print ('\tPopulation size: ' + str(p_size))
-            sample_segment = min( 5, int(p_max_size/min(p_max_size, 1000 ))) # int(p_max_size/10)
-            i = i + 1
-            means = []
-            sample_sizes = []
+        for s_size in range(self.sample_segment, max_sample_size, self.sample_segment):
+            sample = self.population.generate_sample(s_size)
+            sample_sizes.append(s_size)
+            means.append(np.mean(a=sample, axis=0))
             
-            # print ('sample_segment: ' + str(sample_segment))
-            for s_size in range(sample_segment, p_size, sample_segment):
-                # print ('\t\tSample size: ' + str(s_size))
-                sample = np.random.choice(a=population, size=s_size, replace=False)
-                sample_sizes.append( s_size )
-                mean = np.mean(a=sample, axis=0)
-                means.append(mean) 
-                j = j + 1
-                
-                out_df.loc[idx] = [idx, 'population_' + str(i), p_size, 'sample_' + str(j), s_size, mean]
-                idx = idx + 1
-                
-            # print('sample_sizes = ' + str(sample_sizes))
-            # print('means = ' + str(means))
+        return sample_sizes, means
+
+class DataVisualizer:
+    def __init__(self, plt=None):
+        self.plt = plt if plt else __import__('matplotlib.pyplot').pyplot
+        self.show_graphs = True
+        self.graphs_folder_name = './graphs/'
+
+    def plot_2d_graph(self, x_data, y_data, plot_params, ax=None):
+        default_plot_params = {
+            'title': '', 'fontsize': '10', 'fontname': 'arial', 
+            'color': '#000000', 'x_label': 'variable',
+            'y_label': 'Value', 'style': '+-b', 
+            'x_step': (max(x_data)-min(x_data))/10
+        }
+        
+        for key in default_plot_params:
+            if key in plot_params and plot_params[key] is not None:
+                default_plot_params[key] = plot_params[key]
+
+        if ax is not None and isinstance(ax, np.ndarray):
+            ax[0, 0].plot(x_data, y_data, default_plot_params['style'], 
+                         linewidth=0, label='sample points')
+            ax[0, 0].set_xlabel(default_plot_params['x_label'])
+            ax[0, 0].set_ylabel(default_plot_params['y_label'])
+            ax[0, 0].set_title(default_plot_params['title'])
+            ax[0, 0].legend()
             
-            if generate_graphs==True:
-                # generate plot figure instance and axes instances (here 2x2)
-                fig, ax = plt.subplots(nrows=2, ncols=2, sharex=False, sharey=False,
-                                        subplot_kw={'facecolor': 'white'}, gridspec_kw={})
-                plt.grid(True, which='major', axis='both', lw=1, ls='--', c='.75')
-                
-                plot_2d_graph(sample_sizes, means,
-                                        {'title': 'Sample size means\n(' + 'Population size: ' + str(p_size) + ' - MAX samples size: ' + 
-                                        str(s_size) + ' - Sample increment: ' + str(sample_segment) + ')\n& Linear regression (line/polynomial)', 
-                                        'fontsize': '10', 'fontname': 'arial', 'color': '#000000', 
-                                        'x_label': 'sample size', 'y_label': 'sample mean value', 'style': '+-r', 'x_step': None}, 
-                                        ax=ax)
-                
-                MyLinearRegression(X=np.array(sample_sizes).reshape(len(sample_sizes), 1), 
-                                y=np.array(means).reshape(len(means), 1), 
-                                sample_size=s_size, sample_increment=sample_segment, reg_type=['linear', 'polynomial'], 
-                                degree=polynomial_degree, ax=ax)
-                
-                plt.legend(loc="upper left")
-                fig.set_size_inches(12, 12)
-                fig.tight_layout() 
-                if show_graphs: 
-                    fig.show()
-                fig.savefig(os.path.dirname(graphs_folder_name) + '/' + str(s_size) + '.png', transparent=True)
+             # Plot corresponding normal distribution
+            # Fit a normal distribution
+            mu, sigma = norm.fit(y_data)
+
+            # Plotting the histogram and fitted normal distribution
+            ax[0, 1].hist(y_data, density=False, histtype='stepfilled', label='Samples counts histogram', alpha=0.7)
+            ax[0, 1].set_title('Samples data distribution histogram', fontsize=10, color=default_plot_params['color'])
+            ax[0, 1].legend()
             
-            # all_samples.extend(sample_sizes)
-            # all_means.extend(means)
-            all_samples = all_samples + sample_sizes
-            all_means = all_means + means
-            del means
-            del sample_sizes
+            # box plot to show more precise parameters
+            ax[1, 0].boxplot(y_data)
+            ax[1, 0].set_title('Sample data box plot', fontsize=10, color=default_plot_params['color'])
+            ax[1, 0].legend()
+            
+            # fit y_data to to a normal distribution
+            # print('Max y_data: ' + str(max(y_data)))
+            # print('Min y_data: ' + str(min(y_data)))
+            x = np.linspace(min(y_data), max(y_data), np.size(y_data, axis=0))
+            ax[1, 1].set_xlabel('mean value', color=default_plot_params['color'])
+            ax[1, 1].set_ylabel('samples size', color=default_plot_params['color'])
+            
+    
+            ax[1, 1].hist(y_data, density=True, histtype='step', label='Samples counts histogram', alpha=1)
+            ax[1, 1].set_title('Fitted normal distribution\n(' + str('\u03C3') + "=" + str(round(sigma, 5)) + '  ' + str(r'$\mu=$') + str(round(mu, 5)), 
+                               fontsize=10, color=default_plot_params['color'])
+            ax[1, 1].plot(x, norm.pdf(x, mu, sigma),'b-', linewidth=2, label='Fitted Normal distribution')
+            
+            # plot other metrics (mean, median, mode, sigma) as vertical lines
+            mean_y = norm.pdf(np.mean(y_data), mu, sigma)  # Hauteur de la courbe à la moyenne
+            median_y = norm.pdf(np.median(y_data), mu, sigma)  # Hauteur de la courbe à la médiane
+
+            ax[1, 1].axvline(np.mean(y_data), ymin=0, ymax=mean_y, 
+                             linewidth=2, color='r', linestyle='dashed', label=str('$\mu$'))
+            ax[1, 1].axvline(np.median(y_data), ymin=0, ymax=median_y, 
+                             linewidth=2, color='g', linestyle='dotted', label='median')
+
+            # add lines corresponding to (1sigma, 2sigma, 3sigma, -1sigma, -2sigma, -3sigma)
+            my_points = [[str('\u03C3'), sigma], [str('2\u03C3'), 2*sigma], [str('3\u03C3'), 3*sigma],
+                         [str('-\u03C3'), -sigma], [str('-2\u03C3'), -2*sigma], [str('-3\u03C3'), -3*sigma]]
+            for point in my_points:
+                point_x = point[1] + mu  # Point sur l'axe x
+                point_y = norm.pdf(point_x, mu, sigma)  # Hauteur de la courbe à ce point
+                # Convertir en coordonnées relatives pour ymax (entre 0 et 1)
+                ymax = point_y / ax[1, 1].get_ylim()[1]
+                ax[1, 1].axvline(point_x, ymin=0, ymax=ymax, 
+                                 linewidth=1, color='lime', linestyle='--', label=str(point[0]))
+            
+
+    def plot_all_populations_samples(self, x_data, y_data, graphs_folder_name, polynomial_degree=2, show_graphs=True):
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.grid(True)
+        ax.set_xlabel('samples sizes')
+        ax.set_ylabel('means values')
+        ax.scatter(x_data, y_data, c='red', alpha=0.2, label='All populations/samples')
+        ax.legend()
         
-        # plot all populations/samples in one graph and plot linear regseions to see progress
-        plot_all_populations_samples(all_samples, all_means, graphs_folder_name, polynomial_degree=polynomial_degree, show_graphs=show_graphs, plt=plt)
+        plt.tight_layout()
         
-        # set out_df index column
-        out_df.set_index('rank')    
+        # Sauvegarder avant d'afficher
+        plt.savefig(os.path.join(graphs_folder_name, 'all_populations_samples.png'), 
+                    bbox_inches='tight', dpi=300)
         
-        # if isFileExist(out_csv_file):
-            # write output to csv file for populations and samples
-        out_df.to_csv(out_csv_file, sep=';', encoding='utf-8')
-    except:
-        print('Exception occured in function "GenerateSamples". Please check passed parameters.')
-        ret = 1
-    finally:
+        if show_graphs:
+            plt.show()
+        
+        plt.close(fig)
+
+    def test_linear_regression(self, f, X):
+        y = f(X)
+        reg = LinearRegression()
+        reg.fit(X=X, y=y)
+        
+        X_vals = np.linspace(0, 1, 100).reshape(-1, 1)
+        y_vals = reg.predict(X_vals)
+        
+        plt.scatter(X, y, c='r')
+        plt.plot(X_vals, y_vals, color='b')
+        if self.show_graphs:
+            plt.show()
+        plt.savefig(os.path.join(self.graphs_folder_name, 'linear_regression_test.png'))
         plt.close()
-        return ret
-    
 
+    def test_polynomial_regression(self, f, X, degree=2):
+        y = f(X)
+        poly_features = PolynomialFeatures(degree=degree, include_bias=False)
+        X_poly = poly_features.fit_transform(X=X)
+        
+        reg = LinearRegression()
+        reg.fit(X=X_poly, y=y)
+        
+        X_vals = np.linspace(0, 1, 100).reshape(-1, 1)
+        X_vals_poly = poly_features.transform(X_vals)
+        y_vals = reg.predict(X_vals_poly)
+        
+        plt.scatter(X, y, c='r')
+        plt.plot(X_vals, y_vals, color='b')
+        if self.show_graphs:
+            plt.show()
+        plt.savefig(os.path.join(self.graphs_folder_name, 'polynomial_regression_test.png'))
+        plt.close()
 
-def MyLinearRegression(X, y, sample_size=100, sample_increment=1, reg_type=['linear'], degree=1, ax=None):
-    ret_model = None
-    if sample_increment<=0 | sample_size<=0:
-        ret_model = None
-        return ret_model
-      
+class SampleGenerator:
+    def __init__(self, population_size=1000, output_file='output.csv', 
+                 generate_graphs=True, polynomial_degree=2, 
+                 graphs_folder_name='./graphs/', show_graphs=True):
+        self.population_size = population_size
+        self.output_file = output_file
+        self.generate_graphs = generate_graphs
+        self.polynomial_degree = polynomial_degree
+        self.graphs_folder_name = graphs_folder_name
+        self.show_graphs = show_graphs
+        
+        self.population = Population(population_size)
+        self.visualizer = DataVisualizer()
+        self.out_df = pd.DataFrame(columns=['rank', 'population_name', 'population_size', 
+                                          'sample_name', 'sample_size', 'sample_mean'])
+
+    def generate_samples(self):
+        try:
+            idx = 0
+            i = 0
+            j = 0
+            all_samples = []
+            all_means = []
+
+            for p_size in range(min(self.population_size, 100), 
+                              self.population_size, 
+                              min(self.population_size, 500)):
+                
+                analyzer = SampleAnalyzer(self.population)
+                sample_sizes, means = analyzer.analyze_samples(p_size)
+                
+                # Mise à jour du DataFrame
+                for s_size, mean in zip(sample_sizes, means):
+                    j += 1
+                    self.out_df.loc[idx] = [idx, f'population_{i}', p_size, 
+                                          f'sample_{j}', s_size, mean]
+                    idx += 1
+
+                if self.generate_graphs:
+                    self._generate_graphs(sample_sizes, means, p_size)
+
+                all_samples.extend(sample_sizes)
+                all_means.extend(means)
+
+            # Génération du graphique final
+            if self.generate_graphs:
+                self.visualizer.plot_all_populations_samples(
+                    all_samples, all_means, self.graphs_folder_name,
+                    self.polynomial_degree, self.show_graphs
+                )
+
+            # Sauvegarde des données
+            self.out_df.set_index('rank')
+            self.out_df.to_csv(self.output_file, sep=';', encoding='utf-8')
+            return 0
+
+        except Exception as e:
+            print(f'Exception dans SampleGenerator.generate_samples: {str(e)}')
+            return 1
+
+    def _generate_graphs(self, sample_sizes, means, p_size):
+        fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(12, 12))
+        plot_params = {
+            'title': f'Sample size means\nPopulation size: {p_size}',
+            'x_label': 'sample size',
+            'y_label': 'sample mean value'
+        }
+        self.visualizer.plot_2d_graph(sample_sizes, means, plot_params, ax=ax)
+        
+        plt.tight_layout()  # Ajout de tight_layout pour bien organiser les sous-graphiques
+        
+        # Sauvegarder avant d'afficher
+        plt.savefig(os.path.join(self.graphs_folder_name, f'{p_size}.png'), 
+                    bbox_inches='tight', dpi=300)
+        
+        if self.show_graphs:
+            plt.show()
+        
+        plt.close(fig)  # Fermer spécifiquement cette figure
+
+def my_main(population_size=1000, csv_output_file_path='./output.csv', 
+            generate_graphs=True, polynomial_degree=2, 
+            graphs_folder_name='./graphs/', show_graphs=True):
+    """
+    Fonction principale gérant la génération et l'analyse des échantillons
+    """
     try:
-        linear_model = LinearRegression()
-        polynomial_model = LinearRegression()
+        # Start measuring time
+        start_time = time.monotonic()
         
-        if 'polynomial' in reg_type:
-            poly_features = PolynomialFeatures(degree=degree, include_bias=False)
-            X_poly = poly_features.fit_transform(X=X)
-            polynomial_model.fit( X=X_poly, y=y )
-            X_vals = np.linspace(0, sample_size, int(round(sample_size/sample_increment, 0))).reshape(-1, 1)
-            X_vals_poly = poly_features.transform(X_vals)
-            y_vals = polynomial_model.predict(X_vals_poly)    
-            if not(ax is None):
-                # ax[0, 0].scatter(X, y, c='r')
-                if isinstance(ax, np.ndarray):
-                    ax[0, 0].plot(X_vals, y_vals, color='lime', linewidth=2, label='Polynomial regression curve')
-                    ax[0, 0].legend(loc="upper right")
-                else:
-                    ax.plot(X_vals, y_vals, color='lime', linewidth=2, label='Polynomial regression curve')
-                    ax.legend(loc="upper right")
+        # Création et exécution du générateur d'échantillons
+        generator = SampleGenerator(
+            population_size=population_size,
+            output_file=csv_output_file_path,
+            generate_graphs=generate_graphs,
+            polynomial_degree=polynomial_degree,
+            graphs_folder_name=graphs_folder_name,
+            show_graphs=show_graphs
+        )
         
-        if 'linear' in reg_type:
-            linear_model.fit( X=X, y=y )
-            X_vals = np.linspace(0, sample_size, int(round(sample_size/sample_increment, 0))).reshape(-1, 1)
-            y_vals = linear_model.predict(X_vals)
-            print( 'Linear regression:\n\tLine slope= {0}\nLine intersept point= {1}'.format(linear_model.coef_[0][0], linear_model.intercept_[0]) )
+        ret = generator.generate_samples()
+        
+        # Tests additionnels de régression
+        if generate_graphs:
+            # Création d'un échantillon de test
+            X = np.random.rand(100, 1)
             
-            if not(ax is None):
-                # ax[0, 0].scatter(X, y, c='r')
-                if isinstance(ax, np.ndarray):
-                    ax[0, 0].plot(X_vals, y_vals, color='b', linewidth=1, label='Linear regression curve')
-                    ax[0, 0].legend(loc="upper right")
-                else:
-                    ax.plot(X_vals, y_vals, color='b', linewidth=1, label='Linear regression curve')
-                    ax.legend(loc="upper right")
+            # Test de régression linéaire
+            def f1(x): return 4 + 2*X + 5*X**2 + np.random.rand(100, 1)
+            generator.visualizer.test_linear_regression(f1, X)
+            
+            # Test de régression polynomiale
+            def f2(x): return 4 + 2*X + 5*X**2 + np.random.rand(100, 1)
+            generator.visualizer.test_polynomial_regression(f2, X, degree=polynomial_degree)
         
-        ret_model = linear_model, polynomial_model
-    except:
-        print('Exception occured in funtion MyLinearRegression. Please check passed parameters. No model has been returned')
-        ret_model = None, None
-    finally:
-        return ret_model
+        # Calculate the duration in seconds
+        duration = time.monotonic() - start_time
+        print(f"Temps écoulé: {duration:.2f} secondes")
+        
+        return ret
+        
+    except Exception as e:
+        print(f"Erreur dans my_main: {str(e)}")
+        return 1
+
+
    
-
-def testLinearRegression(f, X):
-    import matplotlib.pyplot as plt1
-    y = f(X) # 4 + 2*X + 5*X**2 + np.random.rand(100, 1)
-    
-    reg = LinearRegression()
-    reg.fit( X=X, y=y )
-    
-    X_vals = np.linspace(0, 1, 100).reshape(-1, 1)
-    y_vals = reg.predict(X_vals)
-    
-    plt1.scatter(X, y, c='r')
-    plt1.plot(X_vals, y_vals, color='b')
-    plt1.show()
-    
-
-def testPlynomialRegression(f, X, degree = 2):
-    import matplotlib.pyplot as plt2
-    y = f(X)
-    
-    poly_features = PolynomialFeatures(degree=degree, include_bias=False)
-    X_poly = poly_features.fit_transform(X=X)
-    
-    reg = LinearRegression()
-    reg.fit( X=X_poly, y=y )
-    
-    X_vals = np.linspace(0, 1, 100).reshape(-1, 1)
-    X_vals_poly = poly_features.transform(X_vals)
-    y_vals = reg.predict(X_vals_poly)
-    
-    plt2.scatter(X, y, c='r')
-    plt2.plot(X_vals, y_vals, color='b')
-    plt2.show()
-
-# main function
-def my_main(population_size=1000, csv_output_file_path='./output.csv', generate_graphs=True, polynomial_degree=2, graphs_folder_name='./graphs/', show_graphs=True):
-    # Start measuring time
-    start_time = time.monotonic()
-    ret = GenerateSamples(p_max_size = population_size, out_csv_file = csv_output_file_path, 
-                          generate_graphs = generate_graphs, polynomial_degree=polynomial_degree, graphs_folder_name=graphs_folder_name, show_graphs=show_graphs)
-    # Calculate the duration in seconds
-    duration = time.monotonic() - start_time
-    print(f"Elapsed time: {duration:.2f} seconds")
-    return ret
-
-    X = np.random.rand(100, 1)
-    def f1(x):
-        return 4 + 2*X + 5*X**2 + np.random.rand(100, 1)
-    ret = testLinearRegression(f1, X)
-    
-    X = np.random.rand(100, 1)
-    def f2(x):
-        return 4 + 2*X + 5*X**2 + np.random.rand(100, 1)
-    ret = testPlynomialRegression(f2, X, degree=20)
-    
-    
-    # ret = testPlynomialRegression(degree=4)
-    return ret
-    
 # main usage
 def Usage():
     example ="EXAMPLE :\n" + sys.argv[0] + '1000  ./data/output_1000.csv 1 2'
@@ -415,54 +503,131 @@ def Usage():
             \tshow_graphs: 1 to show graphs, anything else if not. Default set to 1 \n \
             \tgraphs_folder_name: folder path name where generated graphics will be saved \n\n" + example)
     
+
+def test_main():
+    """
+    Fonction de test pour valider différents scénarios d'utilisation de my_main
+    """
+    print("\n=== DÉBUT DES TESTS DE LA FONCTION MAIN ===\n")
     
-# program entry point
+    tests = [
+        {
+            "name": "Test 1: Paramètres par défaut",
+            "params": {},
+            "expected": 0
+        },
+        {
+            "name": "Test 2: Grande population",
+            "params": {
+                "population_size": 10000,
+                "polynomial_degree": 3
+            },
+            "expected": 0
+        },
+        {
+            "name": "Test 3: Sans génération de graphiques",
+            "params": {
+                "generate_graphs": False,
+                "show_graphs": False
+            },
+            "expected": 0
+        },
+        {
+            "name": "Test 4: Dossier de sortie personnalisé",
+            "params": {
+                "csv_output_file_path": "./test_output/test.csv",
+                "graphs_folder_name": "./test_graphs/"
+            },
+            "expected": 0
+        }
+    ]
+    
+    for test in tests:
+        print(f"\n--- {test['name']} ---")
+        try:
+            # Créer les dossiers nécessaires si spécifiés
+            if 'csv_output_file_path' in test['params']:
+                os.makedirs(os.path.dirname(test['params']['csv_output_file_path']), exist_ok=True)
+            if 'graphs_folder_name' in test['params']:
+                os.makedirs(test['params']['graphs_folder_name'], exist_ok=True)
+                
+            # Exécuter le test
+            result = my_main(**test['params'])
+            
+            # Vérifier le résultat
+            if result == test['expected']:
+                print(f"✅ Test réussi (retour: {result})")
+                
+                # Vérifications supplémentaires
+                if 'csv_output_file_path' in test['params']:
+                    if os.path.exists(test['params']['csv_output_file_path']):
+                        print("✅ Fichier CSV généré avec succès")
+                    else:
+                        print("❌ Fichier CSV non généré")
+                        
+                if test['params'].get('generate_graphs', True):
+                    graphs_folder = test['params'].get('graphs_folder_name', './graphs/')
+                    if os.path.exists(graphs_folder) and len(os.listdir(graphs_folder)) > 0:
+                        print("✅ Graphiques générés avec succès")
+                    else:
+                        print("❌ Graphiques non générés")
+            else:
+                print(f"❌ Test échoué (retour: {result}, attendu: {test['expected']})")
+                
+        except Exception as e:
+            print(f"❌ Erreur lors du test: {str(e)}")
+            
+    print("\n=== FIN DES TESTS ===\n")
+
 if __name__ == '__main__':
-    if len(sys.argv)==2:
-        Usage()
-        sys.exit()
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        test_main()
     else:
-        # 1st parameter
-        population_size = 1000
-        if len(sys.argv)>=2:
-            if (sys.argv[1] is not None): population_size = int(sys.argv[1])
-        
-        csv_output_file_path ='./data/output.csv'
-        if len(sys.argv)>=3: 
-            if (sys.argv[2] is not None): 
-                if isFileExist(sys.argv[2]): 
-                    t =  datetime.fromtimestamp(time.time())
-                    csv_output_file_path = os.path.splitext(os.path.basename(sys.argv[2]))[0] + '-' + str(format(t, '%Y-%m-%d-%I-%M%S%p')) + os.path.splitext(os.path.basename(sys.argv[2]))[1]
-        # 2nd parameter
-        generate_graphs = True
-        if len(sys.argv)>=4: 
-            if (sys.argv[3] is not None): 
-                generate_graphs = int(sys.argv[3])==1
+        if len(sys.argv)==2:
+            Usage()
+            sys.exit()
+        else:
+            # 1st parameter
+            population_size = 1000
+            if len(sys.argv)>=2:
+                if (sys.argv[1] is not None): population_size = int(sys.argv[1])
+            
+            csv_output_file_path ='./data/output.csv'
+            if len(sys.argv)>=3: 
+                if (sys.argv[2] is not None): 
+                    if isFileExist(sys.argv[2]): 
+                        t =  datetime.fromtimestamp(time.time())
+                        csv_output_file_path = os.path.splitext(os.path.basename(sys.argv[2]))[0] + '-' + str(format(t, '%Y-%m-%d-%I-%M%S%p')) + os.path.splitext(os.path.basename(sys.argv[2]))[1]
+            # 2nd parameter
+            generate_graphs = True
+            if len(sys.argv)>=4: 
+                if (sys.argv[3] is not None): 
+                    generate_graphs = int(sys.argv[3])==1
                     
-        # 3thd parameter
-        polynomial_degree = 2
-        if len(sys.argv)>=5: 
+            # 3thd parameter
+            polynomial_degree = 2
+            if len(sys.argv)>=5: 
                 if (sys.argv[4] is not None): 
                     polynomial_degree = int(sys.argv[4]) if int(sys.argv[4])>=2 else 2   
-        
-        graphs_folder_name = './graphs/'
-        if len(sys.argv)>=6: 
+            
+            graphs_folder_name = './graphs/'
+            if len(sys.argv)>=6: 
                 if (sys.argv[5] is not None): 
                     if isFileExist(sys.argv[5]):
                         l = len(sys.argv[5])
                         graphs_folder_name = sys.argv[5] if sys.argv[5][:l-1]=='/' else sys.argv[5]+'/'
-       
-        show_graphs = 1
-        if len(sys.argv)>=7: 
+           
+            show_graphs = 1
+            if len(sys.argv)>=7: 
                 if (sys.argv[6] is not None): 
                     show_graphs =int(sys.argv[6])==1
-        
-        print(f"Passed PARAMETERS:\n \
-            population_size: {population_size}  \n \
-            csv_output_file_path: {csv_output_file_path} \n \
-            generate_graphs: {generate_graphs} \n \
-            polynomial_degree: {polynomial_degree} \n \
-            show_graphs: {show_graphs} \n \
-            graphs_folder_name: {graphs_folder_name} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}'))
             
-        sys.exit(my_main(population_size, csv_output_file_path, generate_graphs, polynomial_degree, graphs_folder_name, show_graphs))
+            print(f"Passed PARAMETERS:\n \
+                population_size: {population_size}  \n \
+                csv_output_file_path: {csv_output_file_path} \n \
+                generate_graphs: {generate_graphs} \n \
+                polynomial_degree: {polynomial_degree} \n \
+                show_graphs: {show_graphs} \n \
+                graphs_folder_name: {graphs_folder_name} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}'))
+            
+            sys.exit(my_main(population_size, csv_output_file_path, generate_graphs, polynomial_degree, graphs_folder_name, show_graphs))
