@@ -7,6 +7,8 @@ This project provides tools for generating and analyzing statistical samples fro
 - Generate random population samples with configurable sizes
 - Analyze sample distributions with various statistical metrics
 - Generate visualizations including:
+  - Individual population analysis (4 graphs per population)
+  - Combined population analysis
   - Sample distribution histograms
   - Box plots
   - Normal distribution fitting
@@ -21,9 +23,8 @@ This project provides tools for generating and analyzing statistical samples fro
 ## Installation
 
 1. **Create a virtual environment**:
-
 ```bash
-venv\Scripts\activate
+python -m venv venv
 ```
 
 2. **Activate the virtual environment**:
@@ -45,9 +46,8 @@ pip install numpy pandas scipy scikit-learn matplotlib
 
 ### Basic Usage
 ```bash
-python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial_degree] [show_graphs] [graphs_folder]
+python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial_degree] [show_graphs] [graphs_folder] [generate_combined_graph]
 ```
-
 
 ### Parameters
 
@@ -57,6 +57,10 @@ python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial
 - `polynomial_degree`: Degree for polynomial regression (default: 2)
 - `show_graphs`: Display graphs (1) or not (0) (default: 1)
 - `graphs_folder`: Folder for saving graphs (default: './graphs/')
+- `generate_combined_graph`: Graph generation mode:
+  - 1: Generate separate graphs only (default)
+  - 2: Generate combined graph only
+  - 3: Generate both separate and combined graphs
 
 ### Examples
 
@@ -65,12 +69,22 @@ python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial
 python main.py
 ```
 
-2. **Custom population size and output**:
+2. **Custom population with separate graphs**:
 ```bash
-python main.py 10000 "output_10000.csv" 1 2 0 "./graphs"
+python main.py 10000 "output_10000.csv" 1 2 "./graphs" 0 1
 ```
 
-3. **Run tests**: (you have to close the interactive graphs)
+3. **Custom population with combined graph only**:
+```bash
+python main.py 10000 "output_10000.csv" 1 2 "./graphs" 0 2
+```
+
+4. **Custom population with both graph types**:
+```bash
+python main.py 10000 "output_10000.csv" 1 2 "./graphs" 0 3
+```
+
+5. **Run tests**:
 ```bash
 python main.py --test
 ```
@@ -86,30 +100,33 @@ python main.py --test
    - Other statistical metrics
 
 2. **Graphs (if enabled)**:
-   - Sample distribution histograms
+   - Individual population analysis (sample_size_XXX.png)
+   - Combined population analysis (combined_populations.png)
    - Normal distribution fits
    - Box plots
    - Regression analysis plots
 
 ### Visualizations
 
-The program generates several types of plots:
-- Distribution analysis with μ, σ, and mode indicators
-- Box plots showing quartiles and outliers
+The program generates several types of plots depending on the `generate_combined_graph` parameter:
+- Individual population analysis (4 graphs per population)
+  - Distribution analysis with μ, σ, and mode indicators
+  - Box plots showing quartiles and outliers
+  - Histograms and normal distribution fits
+- Combined population analysis showing all populations in one graph
 - Regression analysis for sample means
-- Combined statistical visualizations
 
 ## Testing
 
-**Run the automated test suite**:
+Run the automated test suite:
 ```bash
 python main.py --test
 ```
 
-**This will execute various test scenarios and verify**:
+This will execute various test scenarios and verify:
 - Basic functionality
 - Large population handling
-- Graph generation
+- Graph generation options
 - File output handling
 
 ## License

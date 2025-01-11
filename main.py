@@ -435,13 +435,15 @@ class DataVisualizer:
 class SampleGenerator:
     def __init__(self, population_size=1000, output_file='output.csv', 
                  generate_graphs=True, polynomial_degree=2, 
-                 graphs_folder_name='./graphs/', show_graphs=True):
+                 graphs_folder_name='./graphs/', show_graphs=True,
+                 generate_combined_graph=1):  # 1: séparés, 2: combiné, 3: les deux
         self.population_size = population_size
         self.output_file = output_file
         self.generate_graphs = generate_graphs
         self.polynomial_degree = polynomial_degree
         self.graphs_folder_name = graphs_folder_name
         self.show_graphs = show_graphs
+        self.generate_combined_graph = generate_combined_graph
         
         # Créer les dossiers nécessaires
         if self.generate_graphs:
@@ -462,10 +464,9 @@ class SampleGenerator:
     def generate_samples(self):
         try:
             idx = 0
-            i = 0
-            j = 0
             all_samples = []
             all_means = []
+            populations_data = {}  # Pour stocker les données par population
 
             for p_size in range(min(self.population_size, 100), 
                               self.population_size, 
@@ -474,25 +475,27 @@ class SampleGenerator:
                 analyzer = SampleAnalyzer(self.population)
                 sample_sizes, means = analyzer.analyze_samples(p_size)
                 
-                # Mise à jour du DataFrame
+                # Mise à jour du DataFrame et stockage des données
                 for s_size, mean in zip(sample_sizes, means):
-                    j += 1
-                    self.out_df.loc[idx] = [idx, f'population_{i}', p_size, 
-                                          f'sample_{j}', s_size, mean]
+                    self.out_df.loc[idx] = [idx, f'Population {p_size}', p_size, 
+                                          f'sample_{idx}', s_size, mean]
                     idx += 1
 
-                if self.generate_graphs:
-                    self._generate_graphs(sample_sizes, means, p_size)
-
+                populations_data[p_size] = {
+                    'sizes': sample_sizes,
+                    'means': means
+                }
+                
                 all_samples.extend(sample_sizes)
                 all_means.extend(means)
 
-            # Génération du graphique final
-            if self.generate_graphs:
-                self.visualizer.plot_all_populations_samples(
-                    all_samples, all_means, self.graphs_folder_name,
-                    self.polynomial_degree, self.show_graphs
-                )
+                # Génération des graphiques séparés si option 1 ou 3
+                if self.generate_graphs and self.generate_combined_graph in [1, 3]:
+                    self._generate_graphs(sample_sizes, means, p_size)
+
+            # Génération du graphique combiné si option 2 ou 3
+            if self.generate_graphs and self.generate_combined_graph in [2, 3]:
+                self._generate_combined_graph(populations_data)
 
             # Sauvegarde des données
             self.out_df.set_index('rank')
@@ -512,20 +515,59 @@ class SampleGenerator:
         }
         self.visualizer.plot_2d_graph(sample_sizes, means, plot_params, ax=ax)
         
-        plt.tight_layout()  # Ajout de tight_layout pour bien organiser les sous-graphiques
+        plt.tight_layout()
+        
+        # Modifier le nom du fichier pour éviter les problèmes de caractères
+        safe_filename = f'sample_size_{p_size}.png'
         
         # Sauvegarder avant d'afficher
-        plt.savefig(os.path.join(self.graphs_folder_name, f'{p_size}.png'), 
+        plt.savefig(os.path.join(self.graphs_folder_name, safe_filename), 
                     bbox_inches='tight', dpi=300)
         
         if self.show_graphs:
             plt.show()
         
-        plt.close(fig)  # Fermer spécifiquement cette figure
+        plt.close(fig)
+
+    def _generate_combined_graph(self, populations_data):
+        """Génère un graphique combiné de toutes les populations"""
+        plt.figure(figsize=(15, 8))
+        
+        # Créer des sous-sections verticales pour chaque population
+        max_size = max(populations_data.keys())
+        
+        # Tracer les données de chaque population
+        for p_size, data in populations_data.items():
+            plt.plot(data['sizes'], data['means'], '-', 
+                    label=f'Population {p_size}', alpha=0.7)
+        
+        plt.grid(True, which='both', linestyle='--', alpha=0.7)
+        plt.xlabel('Sample size per population')
+        plt.ylabel('Generated means per sample')
+        plt.title('Samples means per population')
+        
+        # Ajouter des lignes verticales pour séparer les populations
+        for p_size in populations_data.keys():
+            plt.axvline(x=p_size, color='gray', linestyle='--', alpha=0.3)
+            plt.text(p_size, plt.ylim()[0], f'Population {p_size}\n({p_size})', 
+                    rotation=0, ha='center', va='bottom')
+        
+        plt.legend()
+        plt.tight_layout()
+        
+        # Sauvegarder le graphique
+        plt.savefig(os.path.join(self.graphs_folder_name, 'combined_populations.png'), 
+                    bbox_inches='tight', dpi=300)
+        
+        if self.show_graphs:
+            plt.show()
+        
+        plt.close()
 
 def my_main(population_size=1000, csv_output_file_path='./output.csv', 
             generate_graphs=True, polynomial_degree=2, 
-            graphs_folder_name='./graphs/', show_graphs=True):
+            graphs_folder_name='./graphs/', show_graphs=True,
+            generate_combined_graph=1):
     """
     Fonction principale gérant la génération et l'analyse des échantillons
     """
@@ -540,7 +582,8 @@ def my_main(population_size=1000, csv_output_file_path='./output.csv',
             generate_graphs=generate_graphs,
             polynomial_degree=polynomial_degree,
             graphs_folder_name=graphs_folder_name,
-            show_graphs=show_graphs
+            show_graphs=show_graphs,
+            generate_combined_graph=generate_combined_graph
         )
         
         ret = generator.generate_samples()
@@ -580,7 +623,9 @@ def Usage():
             \tgenerate_graphs: 1 (generate all graphs) or 0 otherwise. Default is 1 \n \
             \tpolynomial_degree: 2 (Linear polynomial regession degree, starting from 2). Default set to 2 \n \
             \tshow_graphs: 1 to show graphs, anything else if not. Default set to 1 \n \
-            \tgraphs_folder_name: folder path name where generated graphics will be saved \n\n" + example)
+            \tgraphs_folder_name: folder path name where generated graphics will be saved \n \
+            \tgenerate_combined_graph: 1 for separate graphs only, " +
+            "2 for combined graph only, 3 for both. Default is 1\n\n" + example)
     
 
 def test_main():
@@ -702,12 +747,23 @@ if __name__ == '__main__':
                 if (sys.argv[6] is not None): 
                     show_graphs =int(sys.argv[6])==1
             
+            # Paramètre des graphiques
+            generate_combined_graph = 1  # Par défaut: graphes séparés uniquement
+            if len(sys.argv)>=8: 
+                if (sys.argv[7] is not None): 
+                    generate_combined_graph = int(sys.argv[7])
+                    if generate_combined_graph not in [1, 2, 3]:
+                        generate_combined_graph = 1
+            
             print(f"Passed PARAMETERS:\n \
                 population_size: {population_size}  \n \
                 csv_output_file_path: {csv_output_file_path} \n \
                 generate_graphs: {generate_graphs} \n \
                 polynomial_degree: {polynomial_degree} \n \
                 show_graphs: {show_graphs} \n \
-                graphs_folder_name: {graphs_folder_name} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}'))
+                graphs_folder_name: {graphs_folder_name} \n \
+                generate_combined_graph: {generate_combined_graph} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}{6:%d}'))
             
-            sys.exit(my_main(population_size, csv_output_file_path, generate_graphs, polynomial_degree, graphs_folder_name, show_graphs))
+            sys.exit(my_main(population_size, csv_output_file_path, generate_graphs, 
+                     polynomial_degree, graphs_folder_name, show_graphs,
+                     generate_combined_graph))
