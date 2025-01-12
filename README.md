@@ -1,10 +1,10 @@
 # 📊 Statistical Sample Generator and Analyzer
 
-This project aims to :
+This project :
 
-1. Demonstrate Large Number Law by generating and analyzing statistical samples from normal distributions
+1. Aims to clarify Large Number Law by generating and analyzing statistical samples from normal distributions
 
-2. Provide tools for generating and analyzing data, including visualization and regression analysis
+2. Provides tools for generating and analyzing data, including visualization and regression analysis
 
 3. Accepts parameters for the population size, the number of samples, the number of graphs to generate, the degree of the polynomial to use for regression, and the folders to save output CSV files and graphs in
 
