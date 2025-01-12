@@ -52,7 +52,7 @@ pip install numpy pandas scipy scikit-learn matplotlib
 
 ### 📚 Basic Usage
 ```bash
-python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial_degree] [show_graphs] [graphs_folder] [generate_combined_graph]
+python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial_degree] [graphs_folder] [show_graphs] [generate_combined_graph]
 ```
 
 ### 📚 Parameters
@@ -61,8 +61,8 @@ python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial
 - `csv_output_file`: Path to output CSV file (default: './output.csv')
 - `generate_graphs`: Generate graphs (1) or not (0) (default: 1)
 - `polynomial_degree`: Degree for polynomial regression (default: 2)
-- `show_graphs`: Display graphs (1) or not (0) (default: 1)
 - `graphs_folder`: Folder for saving graphs (default: './graphs/')
+- `show_graphs`: Display graphs (1) or not (0) (default: 1)
 - `generate_combined_graph`: Graph generation mode:
   - 1: Generate separate graphs only (default)
   - 2: Generate combined graph only

@@ -756,13 +756,13 @@ if __name__ == '__main__':
                         generate_combined_graph = 1
             
             print(f"Passed PARAMETERS:\n \
-                population_size: {population_size}  \n \
-                csv_output_file_path: {csv_output_file_path} \n \
-                generate_graphs: {generate_graphs} \n \
-                polynomial_degree: {polynomial_degree} \n \
-                show_graphs: {show_graphs} \n \
-                graphs_folder_name: {graphs_folder_name} \n \
-                generate_combined_graph: {generate_combined_graph} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}{6:%d}'))
+                population_size: {population_size}  \n \    # 1
+                csv_output_file_path: {csv_output_file_path} \n \    # 2
+                generate_graphs: {generate_graphs} \n \    # 3
+                polynomial_degree: {polynomial_degree} \n \    # 4
+                graphs_folder_name: {graphs_folder_name} \n \    # 5
+                show_graphs: {show_graphs} \n \    # 6
+                generate_combined_graph: {generate_combined_graph} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}{6:%d}'))  # 7
             
             sys.exit(my_main(population_size, csv_output_file_path, generate_graphs, 
                      polynomial_degree, graphs_folder_name, show_graphs,
