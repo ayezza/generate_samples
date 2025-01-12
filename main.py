@@ -96,7 +96,7 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             # set graph title
             ax[0, 0].set_title(default_plot_params['title'], fontsize=default_plot_params['fontsize'],
                         fontname=default_plot_params['fontname'], color=default_plot_params['color'])
-            ax[0,0].legend(loc="upper right")
+            ax[0,0].legend(loc="upper right", fontsize=8)
             
             
             # Plot corresponding normal distribution
@@ -106,12 +106,12 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             # Plotting the histogram and fitted normal distribution
             ax[0, 1].hist(y_data, density=False, histtype='stepfilled', label='Samples counts histogram', alpha=0.7)
             ax[0, 1].set_title('Samples data distribution histogram', fontsize=10, color=default_plot_params['color'])
-            ax[0, 1].legend()
+            ax[0, 1].legend(fontsize=8)
             
             # box plot to show more precise parameters
             ax[1, 0].boxplot(y_data)
             ax[1, 0].set_title('Sample data box plot', fontsize=10, color=default_plot_params['color'])
-            ax[1, 0].legend()
+            #ax[1, 0].legend(fontsize=8)  # Commenté car pas nécessaire pour le box plot
             
             # fit y_data to to a normal distribution
             # print('Max y_data: ' + str(max(y_data)))
@@ -145,11 +145,22 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             for point in my_points:
                 point_x = point[1] + mu  # Point sur l'axe x
                 point_y = norm.pdf(point_x, mu, sigma)  # Hauteur de la courbe à ce point
-                # Convertir en coordonnées relatives pour ymax (entre 0 et 1)
                 ymax = point_y / ax[1, 1].get_ylim()[1]
                 ax[1, 1].axvline(point_x, ymin=0, ymax=ymax, 
                                  linewidth=1, color='lime', linestyle='--', label=str(point[0]))
-            
+                # Ajouter le label sur l'axe x avec rotation verticale
+                ax[1, 1].text(point_x, ax[1, 1].get_ylim()[0], str(point[0]),
+                              horizontalalignment='right', verticalalignment='top',
+                              fontsize=6, color='lime', rotation=90)
+
+            # Pour μ et médiane
+            ax[1, 1].text(np.mean(y_data), ax[1, 1].get_ylim()[0], r'$\mu$',
+                          horizontalalignment='right', verticalalignment='top',
+                          fontsize=6, color='red', rotation=90)
+            ax[1, 1].text(np.median(y_data), ax[1, 1].get_ylim()[0], 'm',
+                          horizontalalignment='right', verticalalignment='top',
+                          fontsize=6, color='green', rotation=90)
+
             # Création d'une légende détaillée pour les paramètres statistiques
             stats_text = (
                 f'Statistiques:\n'
@@ -164,10 +175,11 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
                           transform=ax[1, 1].transAxes,
                           verticalalignment='top',
                           horizontalalignment='right',
-                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                          fontsize=8)
 
             # Ajout d'une légende pour les lignes
-            ax[1, 1].legend(loc='upper left', bbox_to_anchor=(0.02, 0.98))
+            ax[1, 1].legend(loc='upper left', bbox_to_anchor=(0.02, 0.98), fontsize=8)
             
 
 
@@ -292,7 +304,7 @@ class DataVisualizer:
             ax[0, 0].set_xlabel(default_plot_params['x_label'])
             ax[0, 0].set_ylabel(default_plot_params['y_label'])
             ax[0, 0].set_title(default_plot_params['title'])
-            ax[0, 0].legend()
+            ax[0, 0].legend(loc="upper right", fontsize=8)
             
              # Plot corresponding normal distribution
             # Fit a normal distribution
@@ -301,12 +313,12 @@ class DataVisualizer:
             # Plotting the histogram and fitted normal distribution
             ax[0, 1].hist(y_data, density=False, histtype='stepfilled', label='Samples counts histogram', alpha=0.7)
             ax[0, 1].set_title('Samples data distribution histogram', fontsize=10, color=default_plot_params['color'])
-            ax[0, 1].legend()
+            ax[0, 1].legend(fontsize=8)
             
             # box plot to show more precise parameters
             ax[1, 0].boxplot(y_data)
             ax[1, 0].set_title('Sample data box plot', fontsize=10, color=default_plot_params['color'])
-            #ax[1, 0].legend()
+            #ax[1, 0].legend(fontsize=8)  # Commenté car pas nécessaire pour le box plot
             
             # fit y_data to to a normal distribution
             # print('Max y_data: ' + str(max(y_data)))
@@ -322,7 +334,7 @@ class DataVisualizer:
                      f'({colored_text("σ", "lime")}={sigma:.5f}  '
                      f'{colored_text("μ", "red")}={mu:.5f}  '
                      f'{colored_text("mode", "orange")}={mode_val:.5f})')
-            ax[1, 1].set_title(title, fontsize=10, color=default_plot_params['color'])
+            ax[1, 1].set_title(title, fontsize=8, color=default_plot_params['color'])
             ax[1, 1].plot(x, norm.pdf(x, mu, sigma),'b-', linewidth=2, label='Fitted Normal distribution')
             
             # plot other metrics (mean, median, mode, sigma) as vertical lines
@@ -340,18 +352,29 @@ class DataVisualizer:
             for point in my_points:
                 point_x = point[1] + mu  # Point sur l'axe x
                 point_y = norm.pdf(point_x, mu, sigma)  # Hauteur de la courbe à ce point
-                # Convertir en coordonnées relatives pour ymax (entre 0 et 1)
                 ymax = point_y / ax[1, 1].get_ylim()[1]
                 ax[1, 1].axvline(point_x, ymin=0, ymax=ymax, 
                                  linewidth=1, color='lime', linestyle='--', label=str(point[0]))
-            
+                # Ajouter le label sur l'axe x avec rotation verticale
+                ax[1, 1].text(point_x, ax[1, 1].get_ylim()[0], str(point[0]),
+                              horizontalalignment='right', verticalalignment='top',
+                              fontsize=6, color='lime', rotation=90)
+
+            # Pour μ et médiane
+            ax[1, 1].text(np.mean(y_data), ax[1, 1].get_ylim()[0], r'$\mu$',
+                          horizontalalignment='right', verticalalignment='top',
+                          fontsize=6, color='red', rotation=90)
+            ax[1, 1].text(np.median(y_data), ax[1, 1].get_ylim()[0], 'm',
+                          horizontalalignment='right', verticalalignment='top',
+                          fontsize=6, color='green', rotation=90)
+
             # Création d'une légende détaillée pour les paramètres statistiques
             stats_text = (
-                f'Statistiques:\n'
-                f'μ (moyenne) = {np.mean(y_data):.5f}\n'
-                f'σ (écart-type) = {sigma:.5f}\n'
+                f'Statistcs:\n'
+                f'μ (mean) = {np.mean(y_data):.5f}\n'
+                f'σ (standard deviation) = {sigma:.5f}\n'
                 f'mode = {mode_val:.5f}\n'
-                f'médiane = {np.median(y_data):.5f}'
+                f'median = {np.median(y_data):.5f}'
             )
 
             # Position de la légende (en coordonnées relatives de l'axe)
@@ -359,10 +382,11 @@ class DataVisualizer:
                           transform=ax[1, 1].transAxes,
                           verticalalignment='top',
                           horizontalalignment='right',
-                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                          fontsize=8)
 
             # Ajout d'une légende pour les lignes
-            ax[1, 1].legend(loc='upper left', bbox_to_anchor=(0.02, 0.98))
+            ax[1, 1].legend(loc='upper left', bbox_to_anchor=(0.02, 0.98), fontsize=8)
             
 
     def plot_all_populations_samples(self, x_data, y_data, graphs_folder_name, polynomial_degree=2, show_graphs=True):
@@ -539,7 +563,7 @@ class SampleGenerator:
         # Tracer les données de chaque population
         for p_size, data in populations_data.items():
             plt.plot(data['sizes'], data['means'], '-', 
-                    label=f'Population {p_size}', alpha=0.7)
+                    label=f'Pop.{p_size}', alpha=0.7)
         
         plt.grid(True, which='both', linestyle='--', alpha=0.7)
         plt.xlabel('Sample size per population')
@@ -548,8 +572,8 @@ class SampleGenerator:
         
         # Ajouter des lignes verticales pour séparer les populations
         for p_size in populations_data.keys():
-            plt.axvline(x=p_size, color='gray', linestyle='--', alpha=0.3)
-            plt.text(p_size, plt.ylim()[0], f'Population {p_size}\n({p_size})', 
+            plt.axvline(x=p_size, color='blue', linestyle='--', alpha=0.5)
+            plt.text(p_size, plt.ylim()[0], f'Pop.{p_size}\n({p_size})', 
                     rotation=0, ha='center', va='bottom')
         
         plt.legend()
@@ -755,14 +779,15 @@ if __name__ == '__main__':
                     if generate_combined_graph not in [1, 2, 3]:
                         generate_combined_graph = 1
             
-            print(f"Passed PARAMETERS:\n \
-                population_size: {population_size}  \n \    # 1
-                csv_output_file_path: {csv_output_file_path} \n \    # 2
-                generate_graphs: {generate_graphs} \n \    # 3
-                polynomial_degree: {polynomial_degree} \n \    # 4
-                graphs_folder_name: {graphs_folder_name} \n \    # 5
-                show_graphs: {show_graphs} \n \    # 6
-                generate_combined_graph: {generate_combined_graph} \n\n".format('{0:%d}{1:%s}{2:%d}{3:%d}{4:%s}{5:%s}{6:%d}'))  # 7
+            print(f"""Passed PARAMETERS:
+                population_size: {population_size}
+                csv_output_file_path: {csv_output_file_path}
+                generate_graphs: {generate_graphs}
+                polynomial_degree: {polynomial_degree}
+                graphs_folder_name: {graphs_folder_name}
+                show_graphs: {show_graphs}
+                generate_combined_graph: {generate_combined_graph}
+            """)
             
             sys.exit(my_main(population_size, csv_output_file_path, generate_graphs, 
                      polynomial_degree, graphs_folder_name, show_graphs,
