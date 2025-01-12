@@ -1,8 +1,14 @@
-# Statistical Sample Generator and Analyzer
+# 📊 Statistical Sample Generator and Analyzer
 
-This project provides tools for generating and analyzing statistical samples from normal distributions, including visualization and regression analysis.
+This project aims to :
 
-## Features
+1. Demonstrate Large Number Law by generating and analyzing statistical samples from normal distributions
+
+2. Provide tools for generating and analyzing data, including visualization and regression analysis
+
+3. Accepts parameters for the population size, the number of samples, the number of graphs to generate, the degree of the polynomial to use for regression, and the folders to save output CSV files and graphs in
+
+## ✨ Features
 
 - Generate random population samples with configurable sizes
 - Analyze sample distributions with various statistical metrics
@@ -20,7 +26,7 @@ This project provides tools for generating and analyzing statistical samples fro
   - Distribution parameters
   - Confidence intervals
 
-## Installation
+## 📦 Installation
 
 1. **Create a virtual environment**:
 ```bash
@@ -42,14 +48,14 @@ source venv/bin/activate
 pip install numpy pandas scipy scikit-learn matplotlib
 ```
 
-## Usage
+## 📚 Usage
 
-### Basic Usage
+### 📚 Basic Usage
 ```bash
 python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial_degree] [show_graphs] [graphs_folder] [generate_combined_graph]
 ```
 
-### Parameters
+### 📚 Parameters
 
 - `population_size`: Size of population (default: 1000)
 - `csv_output_file`: Path to output CSV file (default: './output.csv')
@@ -62,7 +68,7 @@ python main.py [population_size] [csv_output_file] [generate_graphs] [polynomial
   - 2: Generate combined graph only
   - 3: Generate both separate and combined graphs
 
-### Examples
+### 📚 Examples
 
 1. **Default parameters**:
 ```bash
@@ -89,9 +95,9 @@ python main.py 10000 "output_10000.csv" 1 2 "./graphs" 0 3
 python main.py --test
 ```
 
-## Output
+## 📄 Output
 
-### Generated Files
+### 📄 Generated Files
 
 1. **CSV file containing**:
    - Sample sizes
@@ -106,7 +112,7 @@ python main.py --test
    - Box plots
    - Regression analysis plots
 
-### Visualizations
+### 📊 Visualizations
 
 The program generates several types of plots depending on the `generate_combined_graph` parameter:
 - Individual population analysis (4 graphs per population)
@@ -116,7 +122,7 @@ The program generates several types of plots depending on the `generate_combined
 - Combined population analysis showing all populations in one graph
 - Regression analysis for sample means
 
-## Testing
+## 🧪 Testing
 
 Run the automated test suite:
 ```bash
@@ -129,10 +135,14 @@ This will execute various test scenarios and verify:
 - Graph generation options
 - File output handling
 
-## License
+## 📜 License
 
 This project is open source and available under the MIT License.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 🤝 Regards
+
+Abdel YEZZA, Ph.D
