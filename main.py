@@ -111,7 +111,33 @@ def plot_2d_graph(x_data=list(), y_data=list(), plot_params = None, ax=None):
             # box plot to show more precise parameters
             ax[1, 0].boxplot(y_data)
             ax[1, 0].set_title('Sample data box plot', fontsize=10, color=default_plot_params['color'])
-            #ax[1, 0].legend(fontsize=8)  # Commenté car pas nécessaire pour le box plot
+            quartiles = pd.DataFrame(y_data).quantile(q=[0, .25, .50, .75]).values
+            # Extraire les valeurs scalaires explicitement
+            Q0 = float(quartiles[0].item())
+            Q1 = float(quartiles[1].item())
+            Q2 = float(quartiles[2].item())
+            Q3 = float(quartiles[3].item())
+
+            # Créer le texte des quartiles avec les valeurs scalaires
+            quartiles_text = (
+                f'Quartiles:\n'
+                f'Q0 (min) = {Q0:.5f}\n'
+                f'Q1 (25%) = {Q1:.5f}\n'
+                f'Q2 (50%) = {Q2:.5f}\n'
+                f'Q3 (75%) = {Q3:.5f}\n'
+                f'IQR = {(Q3-Q1):.5f}'
+            )
+
+            ax[1, 0].text(0.95, 0.95, quartiles_text,
+                          transform=ax[1, 0].transAxes,
+                          verticalalignment='top',
+                          horizontalalignment='right',
+                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                          fontsize=8)
+
+            ax[1, 0].set_ylim(Q0 - 1.5*(Q3-Q1), Q3 + 1.5*(Q3-Q1))
+            
+            
             
             # fit y_data to to a normal distribution
             # print('Max y_data: ' + str(max(y_data)))
@@ -318,7 +344,31 @@ class DataVisualizer:
             # box plot to show more precise parameters
             ax[1, 0].boxplot(y_data)
             ax[1, 0].set_title('Sample data box plot', fontsize=10, color=default_plot_params['color'])
-            #ax[1, 0].legend(fontsize=8)  # Commenté car pas nécessaire pour le box plot
+            quartiles = pd.DataFrame(y_data).quantile(q=[0, .25, .50, .75]).values
+            # Extraire les valeurs scalaires explicitement
+            Q0 = float(quartiles[0].item())
+            Q1 = float(quartiles[1].item())
+            Q2 = float(quartiles[2].item())
+            Q3 = float(quartiles[3].item())
+
+            # Créer le texte des quartiles avec les valeurs scalaires
+            quartiles_text = (
+                f'Quartiles:\n'
+                f'Q0 (min) = {Q0:.5f}\n'
+                f'Q1 (25%) = {Q1:.5f}\n'
+                f'Q2 (50%) = {Q2:.5f}\n'
+                f'Q3 (75%) = {Q3:.5f}\n'
+                f'IQR = {(Q3-Q1):.5f}'
+            )
+
+            ax[1, 0].text(0.95, 0.95, quartiles_text,
+                          transform=ax[1, 0].transAxes,
+                          verticalalignment='top',
+                          horizontalalignment='right',
+                          bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                          fontsize=8)
+
+            ax[1, 0].set_ylim(Q0 - 1.5*(Q3-Q1), Q3 + 1.5*(Q3-Q1))
             
             # fit y_data to to a normal distribution
             # print('Max y_data: ' + str(max(y_data)))
@@ -394,7 +444,7 @@ class DataVisualizer:
         ax.grid(True)
         ax.set_xlabel('samples sizes')
         ax.set_ylabel('means values')
-        ax.scatter(x_data, y_data, c='red', alpha=0.2, label='All populations/samples')
+        ax.scatter(x_data, y_data, c='red', alpha=0.2, marker='+', s=5, label='All populations/samples')
         ax.legend()
         
         plt.tight_layout()
@@ -541,8 +591,8 @@ class SampleGenerator:
         
         plt.tight_layout()
         
-        # Modifier le nom du fichier pour éviter les problèmes de caractères
-        safe_filename = f'sample_size_{p_size}.png'
+        # Créer un nom de fichier sûr en utilisant un format avec padding de zéros
+        safe_filename = f'population_{p_size:06d}.png'
         
         # Sauvegarder avant d'afficher
         plt.savefig(os.path.join(self.graphs_folder_name, safe_filename), 
@@ -562,10 +612,10 @@ class SampleGenerator:
         
         # Tracer les données de chaque population
         for p_size, data in populations_data.items():
-            plt.plot(data['sizes'], data['means'], '-', 
-                    label=f'Pop.{p_size}', alpha=0.7)
+            plt.plot(data['sizes'], data['means'], '-',
+                    label=f'Pop.{p_size}', alpha=0.5)
         
-        plt.grid(True, which='both', linestyle='--', alpha=0.7)
+        plt.grid(True, which='both', linestyle='--', alpha=0.5)
         plt.xlabel('Sample size per population')
         plt.ylabel('Generated means per sample')
         plt.title('Samples means per population')
@@ -573,7 +623,7 @@ class SampleGenerator:
         # Ajouter des lignes verticales pour séparer les populations
         for p_size in populations_data.keys():
             plt.axvline(x=p_size, color='blue', linestyle='--', alpha=0.5)
-            plt.text(p_size, plt.ylim()[0], f'Pop.{p_size}\n({p_size})', 
+            plt.text(p_size, plt.ylim()[0], f'Pop.{p_size}\n({p_size})', fontsize=8,
                     rotation=0, ha='center', va='bottom')
         
         plt.legend()
