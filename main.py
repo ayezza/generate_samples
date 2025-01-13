@@ -588,6 +588,36 @@ class SampleGenerator:
         
         plt.close()
 
+def MyLinearRegression(X, y, sample_size, sample_increment, reg_type=['linear'], degree=2, ax=None):
+    """Effectue une régression linéaire ou polynomiale sur les données"""
+    try:
+        if 'linear' in reg_type:
+            reg = LinearRegression()
+            reg.fit(X, y)
+            if ax:
+                x_vals = np.linspace(min(X), max(X), 100).reshape(-1, 1)
+                y_vals = reg.predict(x_vals)
+                ax.plot(x_vals, y_vals, 'b-', label='Linear regression')
+                ax.legend()
+            return reg, None
+            
+        if 'polynomial' in reg_type:
+            poly_features = PolynomialFeatures(degree=degree)
+            X_poly = poly_features.fit_transform(X)
+            reg = LinearRegression()
+            reg.fit(X_poly, y)
+            if ax:
+                x_vals = np.linspace(min(X), max(X), 100).reshape(-1, 1)
+                X_vals_poly = poly_features.fit_transform(x_vals)
+                y_vals = reg.predict(X_vals_poly)
+                ax.plot(x_vals, y_vals, 'g--', label=f'Polynomial regression (degree={degree})')
+                ax.legend()
+            return reg, poly_features
+            
+    except Exception as e:
+        print(f"Erreur dans MyLinearRegression: {str(e)}")
+        return None, None
+
 def my_main(population_size=1000, csv_output_file_path='./output.csv', 
             generate_graphs=True, polynomial_degree=2, 
             graphs_folder_name='./graphs/', show_graphs=True,
