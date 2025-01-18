@@ -1,3 +1,11 @@
+"""
+Author : Abdel YEZZA (Ph.D)
+Date :  jan 2025
+This code is completely free and can be modified without any restriction
+Only one condition, don't remove this header and author name
+"""
+
+
 import sys
 import os
 import time
