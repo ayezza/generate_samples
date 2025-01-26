@@ -48,6 +48,28 @@ source venv/bin/activate
 pip install numpy pandas scipy scikit-learn matplotlib
 ```
 
+## 📁 Directory Structure
+
+```
+generate_samples/
+├── LICENSE
+├── README.md
+├── main.py              # Main script for sample generation and analysis
+├── data/               # Directory for output data files
+│   └── output_10000.csv
+├── graphs/             # Directory for generated graphs
+│   ├── combined_populations.png
+│   ├── linear_regression_test.png
+│   ├── polynomial_regression_test.png
+│   └── population_*.png    # Individual population analysis graphs
+├── test_graphs/        # Directory for test-generated graphs
+│   ├── linear_regression_test.png
+│   ├── polynomial_regression_test.png
+│   └── population_*.png
+└── test_output/       # Directory for test output files
+    └── test.csv
+```
+
 ## 📚 Usage
 
 ### 📚 Basic Usage
@@ -137,9 +159,6 @@ Temps écoulé: 7.87 secondes
 === FIN DES TESTS ===
 ```
 
-
-
-## 📄 Output
 
 ### 📄 Generated Files
 
