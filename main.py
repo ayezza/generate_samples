@@ -428,7 +428,7 @@ class DataVisualizer:
 
             # Création d'une légende détaillée pour les paramètres statistiques
             stats_text = (
-                f'Statistcs:\n'
+                f'Statistics:\n'
                 f'μ (mean) = {np.mean(y_data):.5f}\n'
                 f'σ (standard deviation) = {sigma:.5f}\n'
                 f'mode = {mode_val:.5f}\n'

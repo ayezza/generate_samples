@@ -79,6 +79,20 @@ python main.py
 ```bash
 python main.py 10000 "output_10000.csv" 1 2 "./graphs" 0 1
 ```
+***Output***:
+```bash
+Passed PARAMETERS:
+  population_size: 10000
+  csv_output_file_path: ./data\output_10000.csv
+  generate_graphs: True
+  polynomial_degree: 2
+  graphs_folder_name: ./graphs/
+  show_graphs: False
+  generate_combined_graph: 3
+
+Temps écoulé: 35.73 secondes
+```
+
 
 3. **Custom population with combined graph only**:
 ```bash
