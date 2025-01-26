@@ -109,6 +109,36 @@ python main.py 10000 "output_10000.csv" 1 2 "./graphs" 0 3
 python main.py --test
 ```
 
+***Output***:
+```bash
+=== DÉBUT DES TESTS DE LA FONCTION MAIN ===
+
+
+--- Test 1: Paramètres par défaut ---
+Temps écoulé: 61.28 secondes
+✅ Test réussi (retour: 0)
+✅ Graphiques générés avec succès
+
+--- Test 2: Grande population ---
+Temps écoulé: 70.33 secondes
+✅ Test réussi (retour: 0)
+✅ Graphiques générés avec succès
+
+--- Test 3: Sans génération de graphiques ---
+Temps écoulé: 0.08 secondes
+✅ Test réussi (retour: 0)
+
+--- Test 4: Dossier de sortie personnalisé ---
+Temps écoulé: 7.87 secondes
+✅ Test réussi (retour: 0)
+✅ Fichier CSV généré avec succès
+✅ Graphiques générés avec succès
+
+=== FIN DES TESTS ===
+```
+
+
+
 ## 📄 Output
 
 ### 📄 Generated Files
